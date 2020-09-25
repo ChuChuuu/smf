@@ -99,11 +99,12 @@ func InitSmfContext(config *factory.Config) {
 			smfContext.PEM = tls.PEM
 		}
 		smfContext.BindingIPv4 = os.Getenv(sbi.BindingIPv4)
-		if smfContext.BindingIPv4 == "" {
-			logger.CtxLog.Info("Problem parsing ServerIPv4 address from ENV Variable. Trying to parse it as string.")
+		if smfContext.BindingIPv4 != "" {
+			logger.CtxLog.Info("Parsing ServerIPv4 address from ENV Variable.")
+		} else {
 			smfContext.BindingIPv4 = sbi.BindingIPv4
 			if smfContext.BindingIPv4 == "" {
-				logger.CtxLog.Info("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
+				logger.CtxLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
 				smfContext.BindingIPv4 = "0.0.0.0"
 			}
 		}
@@ -119,9 +120,13 @@ func InitSmfContext(config *factory.Config) {
 		if pfcp.Port == 0 {
 			pfcp.Port = pfcpUdp.PFCP_PORT
 		}
-		pfcp.Addr = os.Getenv(pfcp.Addr)
+		pfcpAddrEnv := os.Getenv(pfcp.Addr)
+		if pfcpAddrEnv != "" {
+			logger.CtxLog.Info("Parsing PFCP IPv4 address from ENV variable found.")
+			pfcp.Addr = pfcpAddrEnv
+		}
 		if pfcp.Addr == "" {
-			logger.CtxLog.Info("Problem parsing PFCP IPv4 address from ENV variable. Using the 0.0.0.0 address as default.")
+			logger.CtxLog.Warn("Error parsing PFCP IPv4 address as string. Using the 0.0.0.0 address as default.")
 			pfcp.Addr = "0.0.0.0"
 		}
 		addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", pfcp.Addr, pfcp.Port))
